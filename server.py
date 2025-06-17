@@ -99,7 +99,7 @@ def show_status(recent_count=5):
         if taskname.exists():
             taskname = read_json(taskname).get("name", "")
         else:
-            taskname = taskid
+            taskname = str(taskid)
         print(Fore.GREEN + f"{f.name} | {taskname:<40} | {data}")
     print()
 
