@@ -29,7 +29,9 @@ python server_monitor.py --cleanup-interval 1800 --cleanup-hours 48 --status-int
 ```bash
 TASK_QUEUE_ROOT=/gemini/space/wjx/stdts/task_queue python worker.py --gpu-id 0 --worker-id node01-0 #--save-log
 ```
-
+```bash
+python server.py submit --cmd "python /gemini/space/wjx/pbhc/_snippets" --name "test"
+```
 
 ```bash
 git push srd master:stdts

@@ -100,7 +100,7 @@ def show_status(recent_count=5):
             taskname = read_json(taskname).get("name", "")
         else:
             taskname = taskid
-        print(Fore.GREEN + f"{f.name} | {taskname} | {data}")
+        print(Fore.GREEN + f"{f.name} | {taskname:<40} | {data}")
     print()
 
     list_tasks(RUNNING, Fore.YELLOW, "=== Running Tasks ===", reverse=True, max_count=recent_count)
