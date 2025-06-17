@@ -77,27 +77,31 @@ def run_task(task, worker_id, gpu_id, save_log):
 
 def worker_loop(worker_id, gpu_id, save_log):
     print("[+] Starting worker", worker_id, gpu_id, save_log)
-    while True:
-        try:
-            write_json(STATUS / f"{worker_id}.json", {"gpu": gpu_id, "status": "idle", "ts": timestamp()})
-            for f in sorted(TASKS.glob("*.json")):
-                lock_path = LOCK / f"{f.stem}.lock"
-                if not atomic_lock(lock_path):
-                    continue
+    try:
+        while True:
+            try:
+                write_json(STATUS / f"{worker_id}.json", {"gpu": gpu_id, "status": "idle", "ts": timestamp()})
+                for f in sorted(TASKS.glob("*.json")):
+                    lock_path = LOCK / f"{f.stem}.lock"
+                    if not atomic_lock(lock_path):
+                        continue
 
-                task = read_json(f)
-                write_json(RUNNING / f.name, task)
-                write_json(STATUS / f"{worker_id}.json", {"gpu": gpu_id, "status": "running", "task": task["id"], "ts": timestamp()})
-                
-                run_task(task, worker_id, gpu_id, save_log)
+                    task = read_json(f)
+                    write_json(RUNNING / f.name, task)
+                    write_json(STATUS / f"{worker_id}.json", {"gpu": gpu_id, "status": "running", "task": task["id"], "ts": timestamp()})
+                    
+                    run_task(task, worker_id, gpu_id, save_log)
+                    break
+                time.sleep(5)
+            except KeyboardInterrupt:
+                print(f"[!] {worker_id} received keyboard interrupt")
                 break
-            time.sleep(5)
-        except KeyboardInterrupt:
-            print(f"[!] {worker_id} received keyboard interrupt")
-            break
-        except Exception as e:
-            print(f"[!] {worker_id} error: {e}")
-            time.sleep(5)
+            except Exception as e:
+                print(f"[!] {worker_id} error: {e}")
+                time.sleep(5)
+    finally:
+        print(f"[!] {worker_id} exiting...")
+        write_json(STATUS / f"{worker_id}.json", {"gpu": gpu_id, "status": "exited", "ts": timestamp()})
 
 def main():
     parser = argparse.ArgumentParser()
