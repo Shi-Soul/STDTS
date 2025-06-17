@@ -5,7 +5,7 @@
 import os
 from pathlib import Path
 
-QUEUE_ROOT = Path(os.environ.get("TASK_QUEUE_ROOT", "/home/bai/STDTS/gpt/task_queue"))
+QUEUE_ROOT = Path(os.environ.get("TASK_QUEUE_ROOT", "/home/bai/STDTS/task_queue"))
 
 TASKS = QUEUE_ROOT / "tasks"
 RUNNING = QUEUE_ROOT / "running"

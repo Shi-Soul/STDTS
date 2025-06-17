@@ -24,8 +24,11 @@ def run_task(task, worker_id, gpu_id, save_log):
 
     log_file = open(log_path, "w") if save_log else None
 
+    cmd = task["command"]
+    cmd = cmd.replace("cuda:0", f"cuda:{gpu_id}")
+
     proc = subprocess.Popen(
-        task["command"],
+        cmd,
         shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
