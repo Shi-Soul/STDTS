@@ -19,6 +19,7 @@ def read_json(path):
         return json.load(f)
 
 def write_json(path, data):
+    path.parent.mkdir(exist_ok=True, parents=True)
     with open(path, 'w') as f:
         json.dump(data, f, indent=2)
 

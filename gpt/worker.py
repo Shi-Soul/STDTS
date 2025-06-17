@@ -101,7 +101,7 @@ def worker_loop(worker_id, gpu_id, save_log):
                         continue
 
                     write_json(RUNNING / f.name, task)
-                    f.unlink()
+                    f.unlink(missing_ok=True)
                     worker_status["status"] = "running"
                     worker_status["task"] = task["id"]
                     worker_status["ts"] = timestamp()
