@@ -32,7 +32,7 @@ def run_task(task, worker_id, gpu_id, save_log):
         shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        env={**os.environ, "CUDA_VISIBLE_DEVICES": str(gpu_id)}
+        env={**os.environ}
     )
 
     def printer():
