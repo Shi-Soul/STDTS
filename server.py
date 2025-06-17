@@ -82,7 +82,7 @@ def show_status(recent_count=5):
 
         show_count = total if max_count is None else min(total, max_count)
         for name, created, task in tasks[:show_count]:
-            print(color + f"TaskName: {task.get('name', ''):<20} | {label}: {created} | {name} ")
+            print(color + f"TaskName: {task.get('name', ''):<40} | {label}: {created} | {name} ")
             # print(color + f"{name} | {label}: {created} | TaskName: {task.get('name', '')[:20]}")
         if total > show_count:
             print(color + f"... and {total - show_count} more not shown\n")
