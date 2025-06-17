@@ -38,6 +38,31 @@ def submit_task(cmd: str, num: int):
         
 from colorama import init, Fore, Style
 
+def listen_heartbeat(ddl=10):
+    for worker_file in STATUS.glob("*.json"):
+        worker = read_json(worker_file)
+        hb = worker.get("ts")
+        hb = time.strptime(hb, "%Y-%m-%d %H:%M:%S")
+        hb = time.mktime(hb)
+        task_id = worker.get("task")
+
+        if hb is None or hb < time.time() - ddl:
+            print(f"[!] Worker {worker_file.stem} 心跳超时, 标记退出")
+
+            if task_id:
+                task_path = RUNNING / f"{task_id}.json"
+                if task_path.exists():
+                    task = read_json(task_path)
+                    task["status"] = "failed"
+                    task["ended"] = timestamp()
+                    task["error"] = f"worker {worker_file.stem} heartbeat timeout"
+                    write_json(FAILED / f"{task_id}.json", task)
+                    task_path.unlink()
+
+            worker["status"] = "abnormal"
+            write_json(worker_file, worker)
+
+
 init(autoreset=True)  # 自动重置颜色
 def show_status(recent_count=5):
     def list_tasks(folder, color, title, reverse=False, label="Created", max_count=None):
@@ -62,6 +87,8 @@ def show_status(recent_count=5):
         else:
             print()
 
+    listen_heartbeat()
+
     print(Fore.CYAN + Style.BRIGHT + "=== Worker Status ===")
     for f in STATUS.glob("*.json"):
         data = read_json(f)
@@ -80,6 +107,7 @@ def kill_task(task_id):
     print(f"[!] Kill signal sent for {task_id}")
     
 def cleanup_tasks(hours):
+    listen_heartbeat()
     seconds = hours * 3600
     for folder in [FINISHED, FAILED]:
         for f in folder.glob("*.json"):
