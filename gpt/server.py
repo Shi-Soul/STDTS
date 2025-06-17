@@ -3,6 +3,7 @@
 
 import argparse
 import uuid
+import shutil
 from config import *
 from utils import *
 
@@ -48,6 +49,24 @@ def kill_task(task_id):
     CONTROL.mkdir(exist_ok=True, parents=True)
     (CONTROL / f"kill-{task_id}").touch()
     print(f"[!] Kill signal sent for {task_id}")
+    
+def cleanup_tasks(hours):
+    seconds = hours * 3600
+    for folder in [FINISHED, FAILED]:
+        for f in folder.glob("*.json"):
+            if older_than(f, seconds):
+                task_id = f.stem
+                print(f"[~] Removing {task_id} from {folder.name}")
+                f.unlink()
+
+                log_file = LOGS / f"{task_id}.log"
+                if log_file.exists():
+                    log_file.unlink()
+
+                lock_file = LOCK / f"{task_id}.lock"
+                if lock_file.exists():
+                    lock_file.unlink()
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -62,6 +81,9 @@ def main():
     kill_parser = subparsers.add_parser("kill")
     kill_parser.add_argument("--task", required=True)
 
+    cleanup_parser = subparsers.add_parser("cleanup")
+    cleanup_parser.add_argument("--hours", type=int, required=True)
+
     args = parser.parse_args()
 
     for d in [TASKS, RUNNING, FINISHED, FAILED, STATUS, LOGS, LOCK, CONTROL]:
@@ -73,6 +95,8 @@ def main():
         show_status()
     elif args.command == "kill":
         kill_task(args.task)
+    elif args.command == "cleanup":
+        cleanup_tasks(args.hours)
 
 if __name__ == '__main__':
     main()

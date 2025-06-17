@@ -24,3 +24,6 @@ def write_json(path, data):
 
 def timestamp():
     return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+
+def older_than(path: Path, seconds: int):
+    return (time.time() - path.stat().st_mtime) > seconds
