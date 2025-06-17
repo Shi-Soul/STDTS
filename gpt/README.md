@@ -12,5 +12,5 @@ python server_monitor.py --cleanup-interval 1800 --cleanup-hours 12 --status-int
 ```
 
 ```bash
-python worker.py --gpu-id 0 --worker-id node01-0 --save-log
+python worker.py --gpu-id 0 --worker-id node01-0 #--save-log
 ```

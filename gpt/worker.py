@@ -8,10 +8,17 @@ from threading import Thread
 
 from config import *
 from utils import *
-
 def run_task(task, worker_id, gpu_id, save_log):
+    import signal
+    from threading import Thread
+    import subprocess
+
     task_id = task["id"]
     log_path = LOGS / f"{task_id}.log"
+
+    if (CONTROL / f"kill-{task_id}").exists():
+        print(f"[!] {task_id} skipped due to existing kill signal.")
+        return
 
     print(f"[+] Running {task_id} on GPU {gpu_id}")
 
@@ -33,19 +40,30 @@ def run_task(task, worker_id, gpu_id, save_log):
                 log_file.write(line)
                 log_file.flush()
 
-    
     t = Thread(target=printer)
     t.start()
 
-    while proc.poll() is None:
-        if (CONTROL / f"kill-{task_id}").exists():
-            proc.terminate()
-            print(f"[!] {task_id} received kill signal")
-            break
-        time.sleep(2)
+    try:
+        while proc.poll() is None:
+            if (CONTROL / f"kill-{task_id}").exists():
+                msg = f"[!] {task_id} received kill signal, terminating..."
+                print(msg)
+                if save_log:
+                    log_file.write(msg)
+                    log_file.flush()
+                proc.terminate()
+                break
+            time.sleep(2)
+    except KeyboardInterrupt:
+        msg = f"[!] KeyboardInterrupt: Terminating task {task_id}"
+        print(msg)
+        if save_log:
+            log_file.write(msg)
+            log_file.flush()
+        proc.terminate()
 
     t.join()
-    code = proc.returncode
+    code = proc.wait()
 
     if save_log:
         log_file.close()
@@ -55,6 +73,7 @@ def run_task(task, worker_id, gpu_id, save_log):
     (RUNNING / f"{task_id}.json").unlink(missing_ok=True)
     (TASKS / f"{task_id}.json").unlink(missing_ok=True)
     print(f"[+] {task_id} finished with code {code}")
+
 
 def worker_loop(worker_id, gpu_id, save_log):
     print("[+] Starting worker", worker_id, gpu_id, save_log)
