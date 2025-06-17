@@ -25,6 +25,7 @@ def generate_task_id():
     return f"task-{ts_b36}{rand}"
 
 def submit_task(cmd: str, num: int):
+    listen_heartbeat()
     TASKS.mkdir(exist_ok=True, parents=True)
     for i in range(num):
         task_id = generate_task_id()
@@ -102,6 +103,7 @@ def show_status(recent_count=5):
 
 
 def kill_task(task_id):
+    listen_heartbeat()
     CONTROL.mkdir(exist_ok=True, parents=True)
     (CONTROL / f"kill-{task_id}").touch()
     print(f"[!] Kill signal sent for {task_id}")
