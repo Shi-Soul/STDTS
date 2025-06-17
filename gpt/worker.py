@@ -74,34 +74,55 @@ def run_task(task, worker_id, gpu_id, save_log):
     (TASKS / f"{task_id}.json").unlink(missing_ok=True)
     print(f"[+] {task_id} finished with code {code}")
 
-
 def worker_loop(worker_id, gpu_id, save_log):
-    print("[+] Starting worker", worker_id, gpu_id, save_log)
+    print(f"[+] Starting worker {worker_id} (GPU {gpu_id}, save_log={save_log})")
     try:
         while True:
             try:
-                write_json(STATUS / f"{worker_id}.json", {"gpu": gpu_id, "status": "idle", "ts": timestamp()})
-                for f in sorted(TASKS.glob("*.json")):
+                # 写入空闲状态
+                write_json(STATUS / f"{worker_id}.json", {
+                    "gpu": gpu_id,
+                    "status": "idle",
+                    "ts": timestamp()
+                })
+
+                # 查找按创建时间排序的任务
+                task_files = sorted(TASKS.glob("*.json"), key=lambda f: read_json(f).get("created", ""))
+                for f in task_files:
+                    task = read_json(f)
+
                     lock_path = LOCK / f"{f.stem}.lock"
                     if not atomic_lock(lock_path):
                         continue
 
-                    task = read_json(f)
                     write_json(RUNNING / f.name, task)
-                    write_json(STATUS / f"{worker_id}.json", {"gpu": gpu_id, "status": "running", "task": task["id"], "ts": timestamp()})
-                    
+                    write_json(STATUS / f"{worker_id}.json", {
+                        "gpu": gpu_id,
+                        "status": "running",
+                        "task": task["id"],
+                        "ts": timestamp()
+                    })
+
                     run_task(task, worker_id, gpu_id, save_log)
                     break
+
                 time.sleep(5)
+
             except KeyboardInterrupt:
-                print(f"[!] {worker_id} received keyboard interrupt")
+                print(f"[!] Worker {worker_id} received keyboard interrupt")
                 break
+
             except Exception as e:
-                print(f"[!] {worker_id} error: {e}")
+                print(f"[!] Worker {worker_id} unexpected error: {e}")
                 time.sleep(5)
+
     finally:
-        print(f"[!] {worker_id} exiting...")
-        write_json(STATUS / f"{worker_id}.json", {"gpu": gpu_id, "status": "exited", "ts": timestamp()})
+        print(f"[!] Worker {worker_id} exiting...")
+        write_json(STATUS / f"{worker_id}.json", {
+            "gpu": gpu_id,
+            "status": "exited",
+            "ts": timestamp()
+        })
 
 def main():
     parser = argparse.ArgumentParser()

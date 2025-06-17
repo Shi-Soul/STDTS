@@ -7,11 +7,27 @@ import shutil
 from config import *
 from utils import *
 from operator import itemgetter
+import uuid
+import time
+
+def base36_encode(number: int) -> str:
+    chars = '0123456789abcdefghijklmnopqrstuvwxyz'
+    result = ''
+    while number:
+        number, i = divmod(number, 36)
+        result = chars[i] + result
+    return result or '0'
+
+def generate_task_id():
+    ts = int(time.time()*100)  # 当前时间戳（秒）
+    ts_b36 = base36_encode(ts)[-4:]  # 转成base36，缩短长度
+    rand = str(uuid.uuid4())[:4]  # 简短随机字符串
+    return f"task-{ts_b36}{rand}"
 
 def submit_task(cmd: str, num: int):
     TASKS.mkdir(exist_ok=True, parents=True)
     for i in range(num):
-        task_id = f"task-{str(uuid.uuid4())[:8]}"
+        task_id = generate_task_id()
         task = {
             "id": task_id,
             "command": cmd,
@@ -19,59 +35,43 @@ def submit_task(cmd: str, num: int):
         }
         write_json(TASKS / f"{task_id}.json", task)
         print(f"[+] Submitted {task_id}")
+        
 from colorama import init, Fore, Style
 
 init(autoreset=True)  # 自动重置颜色
+def show_status(recent_count=5):
+    def list_tasks(folder, color, title, reverse=False, label="Created", max_count=None):
+        tasks = []
+        for f in folder.glob("*.json"):
+            task = read_json(f)
+            created = task.get("created", "")
+            tasks.append((f.name, created, task))
+        tasks.sort(key=lambda x: x[1], reverse=reverse)
 
-def show_status(recent_finished_count=5):
+        total = len(tasks)
+        print(color + f"{title} ({total})")
+        if total == 0:
+            print(color + "No tasks.\n")
+            return
+
+        show_count = total if max_count is None else min(total, max_count)
+        for name, created, task in tasks[:show_count]:
+            print(color + f"{name} | {label}: {created} | Cmd: {task.get('command', '')}")
+        if total > show_count:
+            print(color + f"... and {total - show_count} more not shown\n")
+        else:
+            print()
+
     print(Fore.CYAN + Style.BRIGHT + "=== Worker Status ===")
     for f in STATUS.glob("*.json"):
         data = read_json(f)
-        status_str = f"{f.name} :: {data}"
-        print(Fore.GREEN + status_str)
+        print(Fore.GREEN + f"{f.name} :: {data}")
+    print()
 
-    print("\n" + Fore.CYAN + Style.BRIGHT + "=== Running Tasks ===")
-    for f in RUNNING.glob("*.json"):
-        task = read_json(f)
-        task_str = f"{f.name} | Command: {task.get('command', '')} | Created: {task.get('created', '')}"
-        print(Fore.YELLOW + task_str)
-
-    print("\n" + Fore.CYAN + Style.BRIGHT + "=== Pending Tasks ===")
-    for f in TASKS.glob("*.json"):
-        task = read_json(f)
-        task_str = f"{f.name} | Command: {task.get('command', '')} | Created: {task.get('created', '')}"
-        print(Fore.MAGENTA + task_str)
-
-    print("\n" + Fore.CYAN + Style.BRIGHT + "=== Finished Tasks ===")
-    finished_tasks = []
-    for f in FINISHED.glob("*.json"):
-        task = read_json(f)
-        created = task.get("created", "")
-        finished_tasks.append((f.name, created, task))
-
-    # 按时间倒序排序，最近完成的排前面
-    finished_tasks.sort(key=lambda x: x[1], reverse=True)
-
-    total_finished = len(finished_tasks)
-    print(Fore.GREEN + f"Total finished tasks: {total_finished}")
-
-    if total_finished == 0:
-        print(Fore.GREEN + "No finished tasks yet.")
-        return
-
-    # 显示最近几个任务
-    for name, created, task in finished_tasks[:recent_finished_count]:
-        finished_str = f"{name} | Created: {created} | Cmd: {task.get('command', '')}"
-        print(Fore.GREEN + finished_str)
-
-    if total_finished > recent_finished_count:
-        print(Fore.GREEN + f"... and {total_finished - recent_finished_count} more finished tasks not shown")
-
-    print("\n" + Fore.CYAN + Style.BRIGHT + "=== Failed Tasks ===")
-    for f in FAILED.glob("*.json"):
-        task = read_json(f)
-        failed_str = f"{f.name} FAILED | Created: {task.get('created', '')}"
-        print(Fore.RED + failed_str)
+    list_tasks(RUNNING, Fore.YELLOW, "=== Running Tasks ===")
+    list_tasks(TASKS, Fore.MAGENTA, "=== Pending Tasks ===", reverse=False, max_count=recent_count)
+    list_tasks(FINISHED, Fore.GREEN, "=== Finished Tasks ===", reverse=True, max_count=recent_count)
+    list_tasks(FAILED, Fore.RED, "=== Failed Tasks ===")
 
 
 def kill_task(task_id):
