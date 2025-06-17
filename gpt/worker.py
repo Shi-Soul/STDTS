@@ -87,6 +87,7 @@ def worker_loop(worker_id, gpu_id, save_log):
             try:
                 # 写入空闲状态
                 worker_status["status"] = "idle"
+                worker_status["task"] = None
                 worker_status["ts"] = timestamp()
                 write_json(worker_status_path, worker_status)
 
@@ -122,6 +123,7 @@ def worker_loop(worker_id, gpu_id, save_log):
     finally:
         print(f"[!] Worker {worker_id} exiting...")
         worker_status["status"] = "exited"
+        worker_status["task"] = None
         worker_status["ts"] = timestamp()
         write_json(worker_status_path, worker_status)
 
