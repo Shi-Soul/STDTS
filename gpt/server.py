@@ -74,7 +74,7 @@ def main():
 
     submit_parser = subparsers.add_parser("submit")
     submit_parser.add_argument("--cmd", required=True)
-    submit_parser.add_argument("--num", type=int, required=True)
+    submit_parser.add_argument("--num", type=int, default=1)
 
     status_parser = subparsers.add_parser("status")
 

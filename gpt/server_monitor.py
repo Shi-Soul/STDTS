@@ -1,6 +1,7 @@
 import time
 import signal
 import argparse
+from math import ceil
 from config import *
 from utils import *
 from server import cleanup_tasks, show_status
@@ -17,8 +18,8 @@ def monitor_loop(cleanup_interval, cleanup_hours, status_interval):
     while not STOP:
         now = time.time()
 
+        print("=" * 100)
         if now - last_cleanup > cleanup_interval:
-            print("=" * 100)
             print(f"[Monitor] Running cleanup for tasks older than {cleanup_hours} hours...")
             cleanup_tasks(cleanup_hours)
             last_cleanup = now
@@ -26,10 +27,11 @@ def monitor_loop(cleanup_interval, cleanup_hours, status_interval):
         print(f"[Monitor] Current status at {timestamp()}:")
         show_status()
 
-        for _ in range(status_interval):
+        for i in range(ceil(status_interval)):
             if STOP:
                 break
-            time.sleep(1)
+            dt = status_interval - i
+            time.sleep(dt)
 
 def main():
     parser = argparse.ArgumentParser(description="Distributed Task System Server Monitor")
@@ -47,7 +49,7 @@ def main():
     )
     parser.add_argument(
         "--status-interval",
-        type=int,
+        type=float,
         default=300,
         help="Status print interval in seconds (default: 300s = 5min)"
     )
