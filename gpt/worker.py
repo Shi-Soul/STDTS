@@ -33,6 +33,7 @@ def run_task(task, worker_id, gpu_id, save_log):
                 log_file.write(line)
                 log_file.flush()
 
+    
     t = Thread(target=printer)
     t.start()
 
@@ -68,6 +69,7 @@ def worker_loop(worker_id, gpu_id, save_log):
                 task = read_json(f)
                 write_json(RUNNING / f.name, task)
                 write_json(STATUS / f"{worker_id}.json", {"gpu": gpu_id, "status": "running", "task": task["id"], "ts": timestamp()})
+                
                 run_task(task, worker_id, gpu_id, save_log)
                 break
             time.sleep(5)
