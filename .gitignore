@@ -1,4 +1,4 @@
-gpt/task_queue/*
+task_queue/*
 *__pycache__*
 
 *.pyc
