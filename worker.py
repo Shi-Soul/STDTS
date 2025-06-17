@@ -8,11 +8,12 @@ from threading import Thread
 
 from config import *
 from utils import *
-def run_task(task, worker_id, gpu_id, save_log):
+def run_task(task, worker_id, gpu_id, save_log, worker_status_path):
     import signal
     from threading import Thread
     import subprocess
-
+    worker_status = read_json(worker_status_path)
+    
     task_id = task["id"]
     log_path = LOGS / f"{task_id}.log"
 
@@ -57,6 +58,8 @@ def run_task(task, worker_id, gpu_id, save_log):
                     log_file.flush()
                 proc.terminate()
                 break
+            worker_status["ts"] = timestamp()
+            write_json(worker_status_path, worker_status)
             time.sleep(2)
     except KeyboardInterrupt:
         msg = f"[!] KeyboardInterrupt: Terminating task {task_id}"
@@ -111,7 +114,7 @@ def worker_loop(worker_id, gpu_id, save_log):
                     worker_status["ts"] = timestamp()
                     write_json(worker_status_path, worker_status)
 
-                    run_task(task, worker_id, gpu_id, save_log)
+                    run_task(task, worker_id, gpu_id, save_log, worker_status_path)
                     break
 
                 time.sleep(5)
