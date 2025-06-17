@@ -29,6 +29,21 @@ def show_status():
         task = read_json(f)
         print(f.name, task)
 
+    print("\n=== Pending Tasks ===")
+    for f in TASKS.glob("*.json"):
+        task = read_json(f)
+        print(f.name, task)
+
+    print("\n=== Finished Tasks ===")
+    for f in FINISHED.glob("*.json"):
+        task = read_json(f)
+        print(f.name, "FINISHED", "created:", task.get("created"))
+
+    print("\n=== Failed Tasks ===")
+    for f in FAILED.glob("*.json"):
+        task = read_json(f)
+        print(f.name, "FAILED", "created:", task.get("created"))
+
 def kill_task(task_id):
     CONTROL.mkdir(exist_ok=True, parents=True)
     (CONTROL / f"kill-{task_id}").touch()
