@@ -47,7 +47,7 @@ def listen_heartbeat(ddl=10):
         hb = time.mktime(hb)
         task_id = worker.get("task")
 
-        if hb is None or hb < time.time() - ddl:
+        if hb is None or hb < time.time() - ddl and worker.get("status") != "exited":
             print(f"[!] Worker {worker_file.stem} 心跳超时, 标记退出")
 
             if task_id:
