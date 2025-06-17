@@ -38,7 +38,8 @@ def run_task(task, worker_id, gpu_id, save_log):
     def printer():
         for line in proc.stdout:
             line = line.decode()
-            print(f"[{task_id}] {line}", end="")
+            print(f"{line}", end="")
+            # print(f"[{task_id}] {line}", end="")
             if save_log:
                 log_file.write(line)
                 log_file.flush()
