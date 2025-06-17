@@ -16,7 +16,7 @@
 ```
 
 ```bash
-python server.py submit --cmd "echo 123; sleep 3; echo 456" --num 4
+python server.py submit --cmd "echo 123; sleep 3; echo 456" --name "test"
 python server.py status
 python server.py kill --task task-xxxx
 ```

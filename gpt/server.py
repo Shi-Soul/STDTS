@@ -24,18 +24,18 @@ def generate_task_id():
     rand = str(uuid.uuid4())[:4]  # 简短随机字符串
     return f"task-{ts_b36}{rand}"
 
-def submit_task(cmd: str, num: int):
+def submit_task(cmd: str, name: str):
     listen_heartbeat()
     TASKS.mkdir(exist_ok=True, parents=True)
-    for i in range(num):
-        task_id = generate_task_id()
-        task = {
-            "id": task_id,
-            "command": cmd,
-            "created": timestamp()
-        }
-        write_json(TASKS / f"{task_id}.json", task)
-        print(f"[+] Submitted {task_id}")
+    task_id = generate_task_id()
+    task = {
+        "id": task_id,
+        "command": cmd,
+        "created": timestamp(),
+        "name": name
+    }
+    write_json(TASKS / f"{task_id}.json", task)
+    print(f"[+] Submitted {task_id}")
         
 from colorama import init, Fore, Style
 
@@ -82,7 +82,8 @@ def show_status(recent_count=5):
 
         show_count = total if max_count is None else min(total, max_count)
         for name, created, task in tasks[:show_count]:
-            print(color + f"{name} | {label}: {created} | Cmd: {task.get('command', '')}")
+            print(color + f"TaskName: {task.get('name', ''):<20} | {label}: {created} | {name} ")
+            # print(color + f"{name} | {label}: {created} | TaskName: {task.get('name', '')[:20]}")
         if total > show_count:
             print(color + f"... and {total - show_count} more not shown\n")
         else:
@@ -133,7 +134,7 @@ def main():
 
     submit_parser = subparsers.add_parser("submit")
     submit_parser.add_argument("--cmd", required=True)
-    submit_parser.add_argument("--num", type=int, default=1)
+    submit_parser.add_argument("--name", type=str, default="")
 
     status_parser = subparsers.add_parser("status")
 
@@ -149,7 +150,7 @@ def main():
         d.mkdir(exist_ok=True, parents=True)
 
     if args.command == "submit":
-        submit_task(args.cmd, args.num)
+        submit_task(args.cmd, args.name)
     elif args.command == "status":
         show_status()
     elif args.command == "kill":
