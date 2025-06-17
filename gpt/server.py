@@ -68,7 +68,7 @@ def show_status(recent_count=5):
         print(Fore.GREEN + f"{f.name} :: {data}")
     print()
 
-    list_tasks(RUNNING, Fore.YELLOW, "=== Running Tasks ===")
+    list_tasks(RUNNING, Fore.YELLOW, "=== Running Tasks ===", reverse=True, max_count=recent_count)
     list_tasks(TASKS, Fore.MAGENTA, "=== Pending Tasks ===", reverse=False, max_count=recent_count)
     list_tasks(FINISHED, Fore.GREEN, "=== Finished Tasks ===", reverse=True, max_count=recent_count)
     list_tasks(FAILED, Fore.RED, "=== Failed Tasks ===")

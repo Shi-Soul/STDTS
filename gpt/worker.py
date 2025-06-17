@@ -20,7 +20,7 @@ def run_task(task, worker_id, gpu_id, save_log):
         print(f"[!] {task_id} skipped due to existing kill signal.")
         return
 
-    print(f"[+] Running {task_id} on GPU {gpu_id}")
+    print(f"[+] Running {task_id}")
 
     log_file = open(log_path, "w") if save_log else None
 
@@ -96,6 +96,7 @@ def worker_loop(worker_id, gpu_id, save_log):
                         continue
 
                     write_json(RUNNING / f.name, task)
+                    f.unlink()
                     write_json(STATUS / f"{worker_id}.json", {
                         "gpu": gpu_id,
                         "status": "running",
