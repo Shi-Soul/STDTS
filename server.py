@@ -95,7 +95,9 @@ def show_status(recent_count=5):
     for f in STATUS.glob("*.json"):
         data = read_json(f)
         taskid = data.get("task")
-        taskname = TASKS.glob(f"{taskid}.json").read_text().get("name", "")
+        taskname = TASKS / f"{taskid}.json"
+        if taskname.exists():
+            taskname = read_json(taskname).get("name", "")
         print(Fore.GREEN + f"{f.name} | {taskname} | {data}")
     print()
 
