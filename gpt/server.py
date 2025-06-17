@@ -6,6 +6,7 @@ import uuid
 import shutil
 from config import *
 from utils import *
+from operator import itemgetter
 
 def submit_task(cmd: str, num: int):
     TASKS.mkdir(exist_ok=True, parents=True)
@@ -18,32 +19,60 @@ def submit_task(cmd: str, num: int):
         }
         write_json(TASKS / f"{task_id}.json", task)
         print(f"[+] Submitted {task_id}")
+from colorama import init, Fore, Style
 
-def show_status():
-    print("=== Worker Status ===")
+init(autoreset=True)  # 自动重置颜色
+
+def show_status(recent_finished_count=5):
+    print(Fore.CYAN + Style.BRIGHT + "=== Worker Status ===")
     for f in STATUS.glob("*.json"):
         data = read_json(f)
-        print(f.name, "::", data)
+        status_str = f"{f.name} :: {data}"
+        print(Fore.GREEN + status_str)
 
-    print("\n=== Running Tasks ===")
+    print("\n" + Fore.CYAN + Style.BRIGHT + "=== Running Tasks ===")
     for f in RUNNING.glob("*.json"):
         task = read_json(f)
-        print(f.name, task)
+        task_str = f"{f.name} | Command: {task.get('command', '')} | Created: {task.get('created', '')}"
+        print(Fore.YELLOW + task_str)
 
-    print("\n=== Pending Tasks ===")
+    print("\n" + Fore.CYAN + Style.BRIGHT + "=== Pending Tasks ===")
     for f in TASKS.glob("*.json"):
         task = read_json(f)
-        print(f.name, task)
+        task_str = f"{f.name} | Command: {task.get('command', '')} | Created: {task.get('created', '')}"
+        print(Fore.MAGENTA + task_str)
 
-    print("\n=== Finished Tasks ===")
+    print("\n" + Fore.CYAN + Style.BRIGHT + "=== Finished Tasks ===")
+    finished_tasks = []
     for f in FINISHED.glob("*.json"):
         task = read_json(f)
-        print(f.name, "FINISHED", "created:", task.get("created"))
+        created = task.get("created", "")
+        finished_tasks.append((f.name, created, task))
 
-    print("\n=== Failed Tasks ===")
+    # 按时间倒序排序，最近完成的排前面
+    finished_tasks.sort(key=lambda x: x[1], reverse=True)
+
+    total_finished = len(finished_tasks)
+    print(Fore.GREEN + f"Total finished tasks: {total_finished}")
+
+    if total_finished == 0:
+        print(Fore.GREEN + "No finished tasks yet.")
+        return
+
+    # 显示最近几个任务
+    for name, created, task in finished_tasks[:recent_finished_count]:
+        finished_str = f"{name} | Created: {created} | Cmd: {task.get('command', '')}"
+        print(Fore.GREEN + finished_str)
+
+    if total_finished > recent_finished_count:
+        print(Fore.GREEN + f"... and {total_finished - recent_finished_count} more finished tasks not shown")
+
+    print("\n" + Fore.CYAN + Style.BRIGHT + "=== Failed Tasks ===")
     for f in FAILED.glob("*.json"):
         task = read_json(f)
-        print(f.name, "FAILED", "created:", task.get("created"))
+        failed_str = f"{f.name} FAILED | Created: {task.get('created', '')}"
+        print(Fore.RED + failed_str)
+
 
 def kill_task(task_id):
     CONTROL.mkdir(exist_ok=True, parents=True)
