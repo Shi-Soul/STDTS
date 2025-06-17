@@ -75,16 +75,20 @@ def run_task(task, worker_id, gpu_id, save_log):
     print(f"[+] {task_id} finished with code {code}")
 
 def worker_loop(worker_id, gpu_id, save_log):
+    worker_status_path = STATUS / f"{worker_id}.json"
+    worker_status = {
+                    "gpu": gpu_id,
+                    "status": "idle",
+                    "ts": timestamp()
+                }
     print(f"[+] Starting worker {worker_id} (GPU {gpu_id}, save_log={save_log})")
     try:
         while True:
             try:
                 # 写入空闲状态
-                write_json(STATUS / f"{worker_id}.json", {
-                    "gpu": gpu_id,
-                    "status": "idle",
-                    "ts": timestamp()
-                })
+                worker_status["status"] = "idle"
+                worker_status["ts"] = timestamp()
+                write_json(worker_status_path, worker_status)
 
                 # 查找按创建时间排序的任务
                 task_files = sorted(TASKS.glob("*.json"), key=lambda f: read_json(f).get("created", ""))
@@ -97,12 +101,10 @@ def worker_loop(worker_id, gpu_id, save_log):
 
                     write_json(RUNNING / f.name, task)
                     f.unlink()
-                    write_json(STATUS / f"{worker_id}.json", {
-                        "gpu": gpu_id,
-                        "status": "running",
-                        "task": task["id"],
-                        "ts": timestamp()
-                    })
+                    worker_status["status"] = "running"
+                    worker_status["task"] = task["id"]
+                    worker_status["ts"] = timestamp()
+                    write_json(worker_status_path, worker_status)
 
                     run_task(task, worker_id, gpu_id, save_log)
                     break
@@ -119,11 +121,9 @@ def worker_loop(worker_id, gpu_id, save_log):
 
     finally:
         print(f"[!] Worker {worker_id} exiting...")
-        write_json(STATUS / f"{worker_id}.json", {
-            "gpu": gpu_id,
-            "status": "exited",
-            "ts": timestamp()
-        })
+        worker_status["status"] = "exited"
+        worker_status["ts"] = timestamp()
+        write_json(worker_status_path, worker_status)
 
 def main():
     parser = argparse.ArgumentParser()
