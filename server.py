@@ -94,7 +94,9 @@ def show_status(recent_count=5):
     print(Fore.CYAN + Style.BRIGHT + "=== Worker Status ===")
     for f in STATUS.glob("*.json"):
         data = read_json(f)
-        print(Fore.GREEN + f"{f.name} :: {data}")
+        taskid = data.get("task")
+        taskname = TASKS.glob(f"{taskid}.json").read_text().get("name", "")
+        print(Fore.GREEN + f"{f.name} | {taskname} | {data}")
     print()
 
     list_tasks(RUNNING, Fore.YELLOW, "=== Running Tasks ===", reverse=True, max_count=recent_count)

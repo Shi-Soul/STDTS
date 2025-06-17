@@ -16,22 +16,26 @@ def signal_handler(signum, frame):
 def monitor_loop(cleanup_interval, cleanup_hours, status_interval):
     last_cleanup = 0
     while not STOP:
-        now = time.time()
+        try:
+            now = time.time()
 
-        print("=" * 100)
-        if now - last_cleanup > cleanup_interval:
-            print(f"[Monitor] Running cleanup for tasks older than {cleanup_hours} hours...")
-            cleanup_tasks(cleanup_hours)
-            last_cleanup = now
+            print("=" * 100)
+            if now - last_cleanup > cleanup_interval:
+                print(f"[Monitor] Running cleanup for tasks older than {cleanup_hours} hours...")
+                cleanup_tasks(cleanup_hours)
+                last_cleanup = now
 
-        print(f"[Monitor] Current status at {timestamp()}:")
-        show_status()
+            print(f"[Monitor] Current status at {timestamp()}:")
+            show_status()
 
-        for i in range(ceil(status_interval)):
-            if STOP:
-                break
-            dt = status_interval - i
-            time.sleep(dt)
+            for i in range(ceil(status_interval)):
+                if STOP:
+                    break
+                dt = status_interval - i
+                time.sleep(dt)
+        except Exception as e:
+            print(f"[!] Error: {e}")
+            time.sleep(5)
 
 def main():
     parser = argparse.ArgumentParser(description="Distributed Task System Server Monitor")
