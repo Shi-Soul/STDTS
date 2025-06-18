@@ -29,8 +29,8 @@ def run_task(task, worker_id, gpu_id, save_log, worker_status_path):
     cmd = cmd.replace("cuda:0", f"cuda:{gpu_id}")
 
     proc = subprocess.Popen(
-        cmd,
-        shell=True,
+        cmd.split(),
+        # shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         env={**os.environ}
@@ -57,6 +57,7 @@ def run_task(task, worker_id, gpu_id, save_log, worker_status_path):
                     log_file.write(msg)
                     log_file.flush()
                 # proc.terminate()
+                # proc.kill()
                 proc.send_signal(signal.SIGINT)
                 break
             worker_status["ts"] = timestamp()
@@ -69,9 +70,12 @@ def run_task(task, worker_id, gpu_id, save_log, worker_status_path):
             log_file.write(msg)
             log_file.flush()
         # proc.terminate()
+        # proc.kill()
         proc.send_signal(signal.SIGINT)
 
+    print("DEBUG: before t.join")
     t.join()
+    print("DEBUG: before proc.wait")
     code = proc.wait()
 
     if save_log:
