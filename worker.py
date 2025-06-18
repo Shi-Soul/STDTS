@@ -29,11 +29,12 @@ def run_task(task, worker_id, gpu_id, save_log, worker_status_path):
     cmd = cmd.replace("cuda:0", f"cuda:{gpu_id}")
 
     proc = subprocess.Popen(
-        cmd.split(),
-        # shell=True,
+        cmd,
+        shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        env={**os.environ}
+        env={**os.environ},
+        preexec_fn=os.setsid
     )
 
     def printer():
@@ -58,7 +59,7 @@ def run_task(task, worker_id, gpu_id, save_log, worker_status_path):
                     log_file.flush()
                 # proc.terminate()
                 # proc.kill()
-                proc.send_signal(signal.SIGINT)
+                os.killpg(proc.pid, signal.SIGINT)
                 break
             worker_status["ts"] = timestamp()
             write_json(worker_status_path, worker_status)
@@ -71,7 +72,7 @@ def run_task(task, worker_id, gpu_id, save_log, worker_status_path):
             log_file.flush()
         # proc.terminate()
         # proc.kill()
-        proc.send_signal(signal.SIGINT)
+        os.killpg(proc.pid, signal.SIGINT)
 
     print("DEBUG: before t.join")
     t.join()
