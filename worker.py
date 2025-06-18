@@ -56,7 +56,8 @@ def run_task(task, worker_id, gpu_id, save_log, worker_status_path):
                 if save_log:
                     log_file.write(msg)
                     log_file.flush()
-                proc.terminate()
+                # proc.terminate()
+                proc.send_signal(signal.SIGINT)
                 break
             worker_status["ts"] = timestamp()
             write_json(worker_status_path, worker_status)
@@ -67,7 +68,8 @@ def run_task(task, worker_id, gpu_id, save_log, worker_status_path):
         if save_log:
             log_file.write(msg)
             log_file.flush()
-        proc.terminate()
+        # proc.terminate()
+        proc.send_signal(signal.SIGINT)
 
     t.join()
     code = proc.wait()
