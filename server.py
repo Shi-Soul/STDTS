@@ -115,6 +115,23 @@ def kill_task(task_id):
     (CONTROL / f"kill-{task_id}").touch()
     print(f"[!] Kill signal sent for {task_id}")
     
+def kill_worker(worker_id):
+    listen_heartbeat()
+    CONTROL.mkdir(exist_ok=True, parents=True)
+    # find the worker file, find taskid (if it exists)
+    # if taskid exists, kill the task
+    # if taskid does not exist, do nothing
+    worker_file = STATUS / f"{worker_id}.json"
+    if worker_file.exists():
+        worker = read_json(worker_file)
+        task_id = worker.get("task")
+        if task_id:
+            kill_task(task_id)
+        else:
+            print(f"[!] Worker {worker_id} has no task, skipping")
+    else:
+        print(f"[!] Worker {worker_id} not found, skipping")
+
 def cleanup_tasks(hours):
     listen_heartbeat()
     seconds = hours * 3600
@@ -147,6 +164,9 @@ def main():
     kill_parser = subparsers.add_parser("kill")
     kill_parser.add_argument("--task", required=True)
 
+    kill_worker_parser = subparsers.add_parser("kill-worker")
+    kill_worker_parser.add_argument("--worker", required=True)
+
     cleanup_parser = subparsers.add_parser("cleanup")
     cleanup_parser.add_argument("--hours", type=int, required=True)
 
@@ -161,6 +181,8 @@ def main():
         show_status()
     elif args.command == "kill":
         kill_task(args.task)
+    elif args.command == "kill-worker":
+        kill_worker(args.worker)
     elif args.command == "cleanup":
         cleanup_tasks(args.hours)
 
