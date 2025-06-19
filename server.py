@@ -41,7 +41,11 @@ from colorama import init, Fore, Style
 
 def listen_heartbeat(ddl=10):
     for worker_file in STATUS.glob("*.json"):
-        worker = read_json(worker_file)
+        try:
+            worker = read_json(worker_file)
+        except Exception as e:
+            print(f"[!] Error reading worker file {worker_file}: {e}")
+            continue
         hb = worker.get("ts")
         hb = time.strptime(hb, "%Y-%m-%d %H:%M:%S")
         hb = time.mktime(hb)
