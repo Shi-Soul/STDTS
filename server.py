@@ -25,7 +25,7 @@ def generate_task_id():
     return f"task-{ts_b36}{rand}"
 
 def submit_task(cmd: str, name: str):
-    listen_heartbeat()
+    # listen_heartbeat()
     TASKS.mkdir(exist_ok=True, parents=True)
     task_id = generate_task_id()
     task = {
