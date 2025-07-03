@@ -136,6 +136,14 @@ def kill_worker(worker_id):
     else:
         print(f"[!] Worker {worker_id} not found, skipping")
 
+def kill_all_workers():
+    listen_heartbeat()
+    for f in STATUS.glob("*.json"):
+        worker = read_json(f)
+        task_id = worker.get("task")
+        if task_id:
+            kill_task(task_id)
+
 def cleanup_tasks(hours):
     listen_heartbeat()
     seconds = hours * 3600
@@ -187,6 +195,8 @@ def main():
         kill_task(args.task)
     elif args.command == "kill-worker":
         kill_worker(args.worker)
+    elif args.command == "kill-all-workers":
+        kill_all_workers()
     elif args.command == "cleanup":
         cleanup_tasks(args.hours)
 
