@@ -179,6 +179,8 @@ def main():
     kill_worker_parser = subparsers.add_parser("kill-worker")
     kill_worker_parser.add_argument("--worker", required=True)
 
+    kill_all_workers_parser = subparsers.add_parser("kill-all-workers")
+
     cleanup_parser = subparsers.add_parser("cleanup")
     cleanup_parser.add_argument("--hours", type=int, required=True)
 
