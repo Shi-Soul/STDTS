@@ -28,9 +28,16 @@ python server_monitor.py --cleanup-interval 1800 --cleanup-hours 48 --status-int
 
 ```bash
 TASK_QUEUE_ROOT=/gemini/space/wjx/stdts/task_queue python worker.py --gpu-id 0 --worker-id node01-0 #--save-log
+TASK_QUEUE_ROOT=/gemini/space/wjx/stdts/task_queue python worker.py --gpu-id 0 --worker-id node01-0-2
 ```
 ```bash
 python server.py submit --cmd "python touchgpu.py --gpu cuda:0" --name "touchgpu"
+
+for i in {0..9}; do
+  python server.py submit --cmd "python touchgpu.py --gpu cuda:0" --name "touchgpu"
+done
+
+
 ```
 
 ```bash
